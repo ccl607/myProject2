@@ -103,7 +103,7 @@
 		htmlCode += 			"<tr> <td>상호명 </td> <td><input type='text' name='corp_name' value="+corp_name+"> </td> </tr>"
 		htmlCode += 			"<tr> <td>사업자명</td> <td><input type='text' name='ceo_name' value="+ceo_name+"></td> </tr>"
 		htmlCode += 			"<tr> <td>사업분야</td> <td><input type='text' name='corp_business_area' value="+business_area+"></td> </tr>"
-		htmlCode += 			"<tr> <td>소재지</td> <td><input type='text' name='corp_addr' value="+corp_addr+"></td> </tr>"
+		htmlCode += 			"<tr> <td>소재지</td> <td><input type='text' name='corp_addr' value='"+corp_addr+"'></td> </tr>"
 		htmlCode += 			"<tr> <td>연락처</td> <td><input type='text' name='corp_tel' value="+corp_tel+"></td> </tr>"
 		htmlCode += 			"<tr> <td>FAX</td> <td><input type='text' name='corp_fax' value="+corp_fax+"></td> </tr>"
 		htmlCode += 		"</table>"
