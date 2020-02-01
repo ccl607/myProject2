@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm-->
+<!-- mapper 태그 선언 -->
+<!--mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm-->
+	<!-- namespace 속성값으로 [DAO 인터페이스명]이 오며 -->
+	<!-- [DAO 인터페이스] 메소드명과 동일한 id 값을 소유한 태그를 내포하고 있다. -->
+<!--mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm-->
+<mapper namespace="com.group4.erp.dao.WorkDAO">		
+	<sql id="WorkSearchKey">
+	
+		<!-- <if test="startTime!=null and !startTime.isEmpty() and endTime!=null and !endTime.isEmpty() ">
+			 (to_char(w.outside_start_time,'yyyy-mm-dd') between #{startTime} and #{endTime})
+           and (to_char(w.outside_end_time,'yyyy-mm-dd') between #{startTime} and #{endTime})
+		</if> -->
+		<if test="startTime!=null and !startTime.isEmpty()">
+			 and to_char(w.outside_start_time,'yyyy-mm-dd') &gt;= #{startTime} 
+		</if>
+		<if test="endTime!=null and !endTime.isEmpty() ">
+			 and to_char(w.outside_end_time,'yyyy-mm-dd') &lt;= #{endTime} 
+		</if>
+		<if test="payment!=null and payment.length &gt; 0">
+			and 
+			<!-- <foreach collection="payment" item="paymentArray" open="(" separator="or" close=")">
+				<if test="paymentArray.equals('Y')">
+					travel_payment = 'Y' #{payment}
+				</if>
+				<if test="paymentArray.equals('W')">
+					travel_payment = 'W' #{payment}
+				</if>
+				<if test="paymentArray.equals('N')">
+					travel_payment = 'N' #{payment}
+				</if>
+			</foreach> -->
+			<foreach collection="payment" item="paymentArray" open="(" separator="or" close=")">
+					travel_payment = #{paymentArray} <!-- #{payment} -->
+			</foreach>
+		</if>
+			<if test="searchKey!=null and !searchKey.isEmpty()">
+     			<if test="keyword!= null and !keyword.isEmpty()">
+					<if test ="searchKey.equals('jikup')">
+						and c.jikup like '%'||#{keyword}||'%'
+					</if>
+					<if test ="searchKey.equals('emp_name')">
+						and e1.emp_name like '%'||#{keyword}||'%'
+					</if>
+					<if test ="searchKey.equals('dep_name')">
+						and d.dep_name like '%'||#{keyword}||'%'
+					</if>
+					<if test ="searchKey.equals('destination')">
+						and w.destination like '%'||#{keyword}||'%'
+					</if>
+					<!-- <if test ="searchKey.equals('outside_start_time')">
+						and to_char(w.outside_start_time,'yyyy-mm-dd') like '%'||#{keyword}||'%'
+					</if>
+					<if test ="searchKey.equals('outside_end_time')">
+						and to_char(w.outside_end_time,'yyyy-mm-dd') like '%'||#{keyword}||'%'
+					</if> -->
+					<if test ="searchKey.equals('mgr_name')">
+						and e2.emp_name like '%'||#{keyword}||'%'
+					</if>
+					<!-- <if test ="searchKey.equals('travel_payment')">
+						and travel_payment like '%'||#{keyword}||'%'
+					</if> -->
+     			</if>
+     		</if>
+     	 <if test="sort!='outside_start_time' and sort.length()>0">
+	     	order by ${sort}
+		 </if>
+     	 <if test="sort.equals('outside_start_time') and sort.length()>0">
+	     	order by ${sort}
+		 </if>
+	</sql>
+	
+
+	 <select id='getbusinessTripListAllCnt' resultType="int">
+		select count(*) from (
+			select
+				work_outside_seq	   as "work_outside_seq"
+	    		,c.jikup               as "jikup"
+	    		,e1.emp_name           as "emp_name"
+	    		,d.dep_name            as "dep_name"
+	    		,w.destination         as "destination"
+	    		,w.work_outside_reason as "work_outside_reason"
+	    		,to_char(w.outside_start_time,'yyyy-mm-dd')  as "outside_start_time"
+	    		,to_char(w.outside_end_time,'yyyy-mm-dd')    as "outside_end_time"
+	    		,nvl(e2.emp_name,' ')  as "mgr_name"
+	    		,travel_payment		   as "travel_payment"
+	  			,c.jikup_cd			   as "jikup_cd"
+		    from work_outside_info w inner join employee e1 on w.emp_no=e1.emp_no
+		    	 inner join code_jikup c on c.jikup_cd=e1.jikup_cd
+		    	 inner join dept d on d.dep_no=e1.dep_no
+	     		 left outer join employee e2 on e2.emp_no=e1.mgr_emp_no 
+	     	where delete_yn = 'N'
+	     		<include refid="WorkSearchKey"/>
+	     	)
+			
+	</select>
+	
+	<select id="getBusinessTripList"  parameterType="com.group4.erp.BusinessTripSearchDTO" resultType="java.util.HashMap">
+		select * from(select zzz.*, rownum RNUM from(
+			select
+			work_outside_seq	   as "work_outside_seq"
+    		,c.jikup               as "jikup"
+    		,e1.emp_name           as "emp_name"
+    		,d.dep_name            as "dep_name"
+    		,w.destination         as "destination"
+    		,w.work_outside_reason as "work_outside_reason"
+    		,to_char(w.outside_start_time,'yyyy-mm-dd')  as "outside_start_time"
+    		,to_char(w.outside_end_time,'yyyy-mm-dd')    as "outside_end_time"
+    		,nvl(e2.emp_name,' ')  as "mgr_name"
+    		,travel_payment		   as "travel_payment"
+  			,c.jikup_cd			   as "jikup_cd"
+  			,delete_yn			   as "delete_yn"
+	    from work_outside_info w inner join employee e1 on w.emp_no=e1.emp_no
+	    	 inner join code_jikup c on c.jikup_cd=e1.jikup_cd
+	    	 inner join dept d on d.dep_no=e1.dep_no
+     		 left outer join employee e2 on e2.emp_no=e1.mgr_emp_no 
+     	 where delete_yn = 'N'
+     	 	<include refid="WorkSearchKey"/>
+     	 	<!-- <if test="searchKey!=null and !searchKey.isEmpty()">
+     			<if test="keyword!= null and !keyword.isEmpty()">
+					<if test ="searchKey.equals('jikup')">
+						and c.jikup like '%'||#{keyword}||'%'
+					</if>
+					<if test ="searchKey.equals('emp_name')">
+						and e1.emp_name like '%'||#{keyword}||'%'
+					</if>
+					<if test ="searchKey.equals('dep_name')">
+						and d.dep_name like '%'||#{keyword}||'%'
+					</if>
+					<if test ="searchKey.equals('destination')">
+						and w.destination like '%'||#{keyword}||'%'
+					</if>
+					<if test ="searchKey.equals('outside_start_time')">
+						and to_char(w.outside_start_time,'yyyy-mm-dd') like '%'||#{keyword}||'%'
+					</if>
+					<if test ="searchKey.equals('outside_end_time')">
+						and to_char(w.outside_end_time,'yyyy-mm-dd') like '%'||#{keyword}||'%'
+					</if>
+					<if test ="searchKey.equals('mgr_name')">
+						and e2.emp_name like '%'||#{keyword}||'%'
+					</if>
+					<if test ="searchKey.equals('travel_payment')">
+						and travel_payment like '%'||#{keyword}||'%'
+					</if>
+     			</if>
+     		</if>
+	     <if test="sort!='outside_start_time' and sort.length()>0">
+	     	order by ${sort}
+		 </if>
+     	 <if test="sort.equals('outside_start_time') and sort.length()>0">
+	     	order by ${sort}
+		 </if>	 -->
+		<!--  <if test="sort==null">
+		    order by outside_start_time desc
+		 </if> -->
+     	 ) zzz )
+     	 where	1=1 
+     	 		and 
+     	 		<![CDATA[ RNUM>=${selectPageNo*rowCntPerPage-rowCntPerPage+1} and RNUM<=${selectPageNo*rowCntPerPage} ]]>
+     	 
+	</select>
+		
+	<select id="getBusinessTripDTO" parameterType="int" resultType="com.group4.erp.BusinessTripDTO">
+		select
+				w.work_outside_seq	   as "work_outside_seq"
+				,w.emp_no			   as "emp_no"
+	    		,c.jikup               as "jikup"
+	    		,e1.emp_name           as "emp_name"
+	    		,d.dep_name            as "dep_name"
+	    		,w.destination         as "destination"
+	    		,w.work_outside_reason as "work_outside_reason"
+	    		,to_char(w.outside_start_time,'yyyy-mm-dd')  as "outside_start_time"
+	    		,to_char(w.outside_end_time,'yyyy-mm-dd')    as "outside_end_time"
+	    		,nvl(e2.emp_name,' ')  as "mgr_name"
+	  			,c.jikup_cd			   as "jikup_cd"
+		from work_outside_info w inner join employee e1 on w.emp_no=e1.emp_no
+	    	 inner join code_jikup c on c.jikup_cd=e1.jikup_cd
+	    	 inner join dept d on d.dep_no=e1.dep_no
+     		 left outer join employee e2 on e2.emp_no=e1.mgr_emp_no
+     	where delete_yn = 'N' and w.work_outside_seq=#{work_outside_seq}
+	</select>
+	
+	<insert id="insertBusinessTrip" parameterType="com.group4.erp.BusinessTripDTO">
+		 insert into work_outside_info(work_outside_seq
+		 								,emp_no
+		 								,destination
+		 								,work_outside_reason
+		 								,outside_start_time
+		 								,outside_end_time
+		 								,travel_payment
+		 								,delete_yn
+		 								)
+   				values( (select nvl(max(work_outside_seq), 0)+1 from work_outside_info),
+   				 		,#{emp_no}
+   				 		,#{destination}
+   				 		,#{work_outside_reason}
+   				 		,#{outside_start_time}
+   				 		,#{outside_end_time}
+   				 		'W',
+   				 		'N')
+	</insert>
+</mapper>
