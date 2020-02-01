@@ -23,8 +23,8 @@
 		});
 		
 		$("#joinMember").click(function() {
-			alert("test");
-			//location.href="/myProject/goJoinMemberPage.do";
+			//alert("test");
+			location.href="/myProject2/goJoinMemberPage.do";
 		});
 		
 	});
